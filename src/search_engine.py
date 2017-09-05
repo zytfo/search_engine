@@ -8,6 +8,7 @@ import nltk
 dump = open('/Users/Artur/Desktop/University/Information Retrieval/Search Engine/src/dump', 'r')  # w+ to write
 # dump.write(json.dumps(terms))
 terms = json.loads(dump.read())
+disj = False
 
 def intersect(p1, p2, disj):
     answer = []
@@ -35,11 +36,12 @@ def get_rest(lst):
     return rest_list
 
 def read_input(text):
-    #print("Write you sentence")
     words = nltk.word_tokenize(text)
     fixed = []
-    for word in words:
-        word = dp.fix_token(word)
+    for i in range(0, len(words)):
+        if i == 0:
+            fixed.append(words[i])
+        word = dp.fix_token(words[i])
         fixed.append(word)
     return fixed
 
@@ -49,7 +51,13 @@ def multi_intersect(words):
     result = []
     non_exist = ''
     cont = True
-    for word in words:
+    if words[0] == 'OR':
+        disj = True
+    elif words[0] == 'AND':
+        disj = False
+    else:
+        return ("The first term should be either AND or OR.")
+    for word in words[1:]:
         if word not in terms:
             non_exist += str(word) + ' '
             cont = False
@@ -62,9 +70,12 @@ def multi_intersect(words):
         result = lst[0]                  # first in asc
         trms = get_rest(lst)
         while len(trms) != 0 and len(result) != 0:
-            result = intersect(result, trms[0], False)
+            result = intersect(result, trms[0], disj)
             trms = get_rest(trms)
         return result
 
 def main(text):
+    #print(multi_intersect(read_input(text)))
     return multi_intersect(read_input(text))
+
+#main(input())
