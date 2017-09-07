@@ -3,14 +3,14 @@ import search_engine as se
 import webbrowser
 import functools
 
-class MyGUI:
+class gui:
 
   def __init__(self):
     messages = []
     output = []
     def search(event):
       output = se.main(self.entry.get())
-      if len(output) != 0 and output[0] != "T":
+      if len(output) != 0 and output[0] != "T" and output[0] != "S":
         self.message_output['text'] = output
         self.message_output.bind("<Button-1>", functools.partial(callback, index = output[0]))
         self.nothing['text'] = "Results: " + str(len(output))
@@ -49,4 +49,4 @@ class MyGUI:
     self.frame.pack()
     mainloop()
 
-myGUI = MyGUI()
+gui = gui()

@@ -2,7 +2,6 @@
 
 import json
 import src.document_parser as dp
-import src.expression_parser as ep
 import nltk
 import collections
 
@@ -34,11 +33,32 @@ def intersect(p1, p2, operation):
                 p2_index += 1
     return answer
 
-def get_rest(lst):
-    rest_list = []
-    for i in range(1, len(lst)):        
-        rest_list.append(lst[i])
-    return rest_list
+def shunting_yard(input):
+    order = {'(': 0, ')': 0, 'OR': 1, 'AND': 2, 'NOT': 3}
+    output = []
+    stack = []
+    oeprator = ''
+    for token in input:
+        if token == '(':
+            stack.append(token)
+        elif token == ')':
+            operator = stack.pop()
+            while operator != '(':
+                output.append(operator)
+                operator = stack.pop()
+        elif token in order:
+            if stack:
+                current_op = stack[-1]
+                while stack and order[current_op] > order[token]:
+                    output.append(stack.pop())
+                    if stack:
+                        current_op = stack[-1]
+            stack.append(token)
+        else:
+            output.append(token.lower())
+    while stack:
+        output.append(stack.pop())
+    return output
 
 def negation(term_indexes):
     result = []
@@ -64,7 +84,7 @@ def parse(query):
     stemmer = nltk.stem.porter.PorterStemmer()
     for i in range(0, len(query)):
         st += dp.fix_token(query[i]) + " "
-    queue = collections.deque(ep.shunting_yard(st.split()))
+    queue = collections.deque(shunting_yard(st.split()))
     for word in queue:
         word = stemmer.stem(word)
         if word not in ['AND', 'OR', 'NOT'] and word not in terms:
@@ -72,7 +92,7 @@ def parse(query):
             cont = False
     if cont == False:
         return ("There is no word(s) " + non_exist + "in documents. Try another query.")
-    queue = collections.deque(ep.shunting_yard(query))
+    queue = collections.deque(shunting_yard(query))
 
     while queue:
         token = queue.popleft()
@@ -94,12 +114,18 @@ def parse(query):
             result = negation(negation_term)
         stack.append(result)
     if len(stack) != 1:
-        return "Something went wrong. The problem is in your query"
+        return "Something went wrong. Don't forget to write either AND, OR or NOT in multiple query. You can use scopes as well"
     return stack.pop()
 
 '''
 Works withound boolean expression handler for queries like: information retrieval
 '''
+def get_rest(lst):
+    rest_list = []
+    for i in range(1, len(lst)):
+        rest_list.append(lst[i])
+    return rest_list
+
 def multi_intersect(words, operation):
     lst = []
     trms = []
