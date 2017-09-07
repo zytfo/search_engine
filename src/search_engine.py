@@ -2,15 +2,16 @@
 
 import json
 import src.document_parser as dp
+import src.expression_parser as ep
 import nltk
+import collections
 
-# terms = dp.parse()
+#terms = dp.parse()
 dump = open('/Users/Artur/Desktop/University/Information Retrieval/Search Engine/src/dump', 'r')  # w+ to write
-# dump.write(json.dumps(terms))
+#dump.write(json.dumps(terms))
 terms = json.loads(dump.read())
-disj = False
 
-def intersect(p1, p2, disj):
+def intersect(p1, p2, operation):
     answer = []
     p1_index = 0
     p2_index = 0
@@ -20,13 +21,17 @@ def intersect(p1, p2, disj):
             p1_index += 1
             p2_index += 1
         elif p1[p1_index] < p2[p2_index]:
-            if disj == True:
+            if operation == 'OR':
                 answer.append(p1[p1_index])
-            p1_index += 1
+                p1_index += 1
+            elif operation == 'AND':
+                p1_index += 1
         else:
-            if disj == True:
+            if operation == 'OR':
                 answer.append(p2[p2_index])
-            p2_index += 1
+                p2_index += 1
+            elif operation == 'AND':
+                p2_index += 1
     return answer
 
 def get_rest(lst):
@@ -35,47 +40,93 @@ def get_rest(lst):
         rest_list.append(lst[i])
     return rest_list
 
-def read_input(text):
-    words = nltk.word_tokenize(text)
-    fixed = []
-    for i in range(0, len(words)):
-        if i == 0:
-            fixed.append(words[i])
-        word = dp.fix_token(words[i])
-        fixed.append(word)
-    return fixed
+def negation(term_indexes):
+    result = []
+    terms_index = list(range(1, len(terms)))
+    if not term_indexes:
+        return term_indexes
+    i = 0
+    for item in terms_index:
+        if item != term_indexes[i]:
+            result.append(item)
+        elif i + 1 < len(term_indexes):
+            i += 1
+    return result
 
-def multi_intersect(words):
+def parse(query):
+    query = query.replace('(', '( ')
+    query = query.replace(')', ' )')
+    query = query.split(' ')
+    cont = True
+    stack = []
+    st = ''
+    non_exist = ''
+    stemmer = nltk.stem.porter.PorterStemmer()
+    for i in range(0, len(query)):
+        st += dp.fix_token(query[i]) + " "
+    queue = collections.deque(ep.shunting_yard(st.split()))
+    for word in queue:
+        word = stemmer.stem(word)
+        if word not in ['AND', 'OR', 'NOT'] and word not in terms:
+            non_exist += str(word) + ' '
+            cont = False
+    if cont == False:
+        return ("There is no word(s) " + non_exist + "in documents. Try another query.")
+    queue = collections.deque(ep.shunting_yard(query))
+
+    while queue:
+        token = queue.popleft()
+        result = []
+        if (token != 'AND' and token != 'OR' and token != 'NOT'):
+            token = stemmer.stem(token)
+            if (token in terms):
+                result = terms[token]
+        elif (token == 'AND'):
+            first_term = stack.pop()
+            second_term = stack.pop()
+            result = intersect(first_term, second_term, 'AND')
+        elif (token == 'OR'):
+            first_term = stack.pop()
+            second_term = stack.pop()
+            result = intersect(first_term, second_term, 'OR')
+        elif (token == 'NOT'):
+            negation_term = stack.pop()
+            result = negation(negation_term)
+        stack.append(result)
+    if len(stack) != 1:
+        return "Something went wrong. The problem is in your query"
+    return stack.pop()
+
+'''
+Works withound boolean expression handler for queries like: information retrieval
+'''
+def multi_intersect(words, operation):
     lst = []
     trms = []
     result = []
+    default_operation = 'AND'
     non_exist = ''
     cont = True
-    if words[0] == 'OR':
-        disj = True
-    elif words[0] == 'AND':
-        disj = False
-    else:
-        return ("The first term should be either AND or OR.")
-    for word in words[1:]:
+    if len(words) == 1 and operation == '':
+        None
+    elif operation not in ['AND', 'OR', 'NOT']:
+        return "An operation should be either AND, OR or NOT."
+    for word in words:
         if word not in terms:
             non_exist += str(word) + ' '
             cont = False
         else:
             lst.append(terms.get(word))
     if cont == False:
-        return ("There is no word(s) " + non_exist + " in documents. Try another query.")
+        return "There is no word(s) " + non_exist + " in documents. Try another query."
     else:
         lst = sorted(lst, key = len)
-        result = lst[0]                  # first in asc
+        result = lst[0]                  # first in desc
         trms = get_rest(lst)
         while len(trms) != 0 and len(result) != 0:
-            result = intersect(result, trms[0], disj)
+            result = intersect(result, trms[0], operation)
             trms = get_rest(trms)
         return result
 
-def main(text):
-    #print(multi_intersect(read_input(text)))
-    return multi_intersect(read_input(text))
-
-#main(input())
+def main(query):
+    return parse(query)

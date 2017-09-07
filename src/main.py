@@ -13,7 +13,7 @@ class MyGUI:
       if len(output) != 0 and output[0] != "T":
         self.message_output['text'] = output
         self.message_output.bind("<Button-1>", functools.partial(callback, index = output[0]))
-        self.nothing['text'] = ""
+        self.nothing['text'] = "Results: " + str(len(output))
       elif len(output) == 0:
         self.nothing['text'] = "No coincidence"
         self.message_output['text'] = ""
@@ -36,7 +36,8 @@ class MyGUI:
     self.button = Button(self.frame, text = u"Search")
     self.button.bind("<Button-1>", search)
     self.entry.bind("<Return>", search)
-    self.caution = Label(self.frame, text="If you press on any document number you will open the first suitable one.")
+    self.caution = Label(self.frame, text = "If you press on any document number you will open the first suitable one.")
+    self.number_of_doc = Label(self.frame)
     self.message_output = Message(self.frame, width = 850, font = 'arial 14', fg = "blue", cursor = "hand2")
     self.nothing = Label(self.frame)
     self.label.pack()
