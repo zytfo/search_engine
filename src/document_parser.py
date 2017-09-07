@@ -4,16 +4,20 @@
 '''
 import nltk
 import re
+import os
 
 '''
     Splitting LISA arhchives into the bunch of documents
 '''
 def split():
     counter = 1
+    dir = os.path.dirname(__file__)
     for i in range(1, 15):
-        with open('/Users/Artur/Desktop/lisa/Archives/LISA' + str(i)) as file:
+        relative_path = os.path.join(dir, '../Archives/' + str(i) + '.txt')
+        with open(relative_path) as file:
             for line in file:
-                file = open('/Users/Artur/Desktop/lisa/Documents/' + str(counter) + '.txt', 'a')
+                path = os.path.join(dir, '../Documents/' + str(counter) + '.txt')
+                file = open(path, 'a')
                 if line.find("********************************************") == -1:
                     if 'Document' not in line:
                         file.write(line)
@@ -24,8 +28,10 @@ def split():
 def parse():
     terms = {}
     stemmer = nltk.stem.porter.PorterStemmer()
+    dir = os.path.dirname(__file__)
     for i in range(1, 6005):
-        with open('/Users/Artur/Desktop/University/Information Retrieval/Search Engine/Documents/' + str(i) + '.txt') as file:
+        relative_path = os.path.join(dir, '../Documents/' + str(i) + '.txt')
+        with open(relative_path) as file:
             tokens = nltk.word_tokenize(file.read())
             for word in tokens:
                 word = stemmer.stem(fix_token(word.lower()))

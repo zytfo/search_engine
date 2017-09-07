@@ -2,6 +2,7 @@ from tkinter import *
 import search_engine as se
 import webbrowser
 import functools
+import os
 
 class gui:
 
@@ -24,7 +25,9 @@ class gui:
         self.message_output.unbind("<Button-1>")
 
     def callback(event, index):
-      webbrowser.open_new(r"file:///Users/Artur/Desktop/University/Information Retrieval/Search Engine/Documents/" + str(index) + ".txt")
+      dir = os.path.dirname(__file__)
+      relative_path = os.path.join(dir, '../Documents/' + str(index) + '.txt')
+      webbrowser.open_new(r"file://" + relative_path)
 
     self.__mainWindow = Tk()
     self.__mainWindow.title("Search Engine")
@@ -33,7 +36,7 @@ class gui:
     self.labelText = 'Enter your query'
     self.label = Label(self.frame, text = self.labelText)
     self.entry = Entry(self.frame, width = 40)
-    self.button = Button(self.frame, text = u"Search")
+    self.button = Button(self.frame, text = u"Search (or press Enter)")
     self.button.bind("<Button-1>", search)
     self.entry.bind("<Return>", search)
     self.caution = Label(self.frame, text = "If you press on any document number you will open the first suitable one.")
