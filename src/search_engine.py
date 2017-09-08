@@ -97,21 +97,16 @@ def parse(query):
     while queue:
         token = queue.popleft()
         result = []
-        if (token != 'AND' and token != 'OR' and token != 'NOT'):
+        if token != 'AND' and token != 'OR' and token != 'NOT':
             token = stemmer.stem(token)
-            if (token in terms):
+            if token in terms:
                 result = terms[token]
-        elif (token == 'AND'):
-            first_term = stack.pop()
-            second_term = stack.pop()
-            result = intersect(first_term, second_term, 'AND')
-        elif (token == 'OR'):
-            first_term = stack.pop()
-            second_term = stack.pop()
-            result = intersect(first_term, second_term, 'OR')
-        elif (token == 'NOT'):
-            negation_term = stack.pop()
-            result = negation(negation_term)
+        elif token == 'AND':
+            result = intersect(stack.pop(), stack.pop(), 'AND')
+        elif token == 'OR':
+            result = intersect(stack.pop(), stack.pop(), 'OR')
+        elif token == 'NOT':
+            result = negation(stack.pop())
         stack.append(result)
     if len(stack) != 1:
         return "Something went wrong. Don't forget to write either AND, OR or NOT in multiple query. You can use scopes as well"
