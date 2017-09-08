@@ -41,7 +41,6 @@ def shunting_yard(input):
     order = {'(': 0, ')': 0, 'OR': 1, 'AND': 2, 'NOT': 3}
     output = []
     stack = []
-    oeprator = ''
     for token in input:
         if token == '(':
             stack.append(token)
