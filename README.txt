@@ -4,7 +4,7 @@ If you’re not sure, you can check it or install Python3 using this guide(https
 	sudo easy_install pip
 3. Install nltk library:	
 	sudo pip3 install -U nltk
-4. Download(https://goo.gl/gmkwYr) my repository(https://goo.gl/RWCYdm) and unzip it whatever you want.
+4. Download(https://goo.gl/gmkwYr) an archive from my repository(https://goo.gl/RWCYdm) and unzip it anywhere.
 5. In terminal:
 	cd <directory where you unziped an archive>
 	cd search_engine-master
