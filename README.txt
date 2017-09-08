@@ -1,5 +1,5 @@
 1. Be sure you have installed python3. 
-If you’re not sure, you can check it or install Python3 using this guide (we don’t need a virtual environments).
+If you’re not sure, you can check it or install Python3 using this guide(https://goo.gl/rCjaGk) (we don’t need a virtual environments).
 2. Install pip:	
 	sudo easy_install pip
 3. Install nltk library:	
