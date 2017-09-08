@@ -39,7 +39,7 @@ class gui:
     self.button = Button(self.frame, text = u"Search (or press Enter)")
     self.button.bind("<Button-1>", search)
     self.entry.bind("<Return>", search)
-    self.caution = Label(self.frame, text = "If you press on any document number you will open the first suitable one.")
+    self.caution = Label(self.frame, text = "If you press on any document number you will open the first suitable one as an example.")
     self.number_of_doc = Label(self.frame)
     self.message_output = Message(self.frame, width = 850, font = 'arial 14', fg = "blue", cursor = "hand2")
     self.nothing = Label(self.frame)
