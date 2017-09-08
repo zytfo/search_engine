@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-import src.document_parser as dp
+import document_parser as dp
 import nltk
 import collections
 
