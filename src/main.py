@@ -25,9 +25,8 @@ class gui:
         self.message_output.unbind("<Button-1>")
 
     def callback(event, index):
-      dir = os.path.dirname(__file__)
-      relative_path = os.path.join(dir, '../Documents/' + str(index) + '.txt')
-      webbrowser.open_new(r"file://" + relative_path)
+      path = "https://github.com/gittasty/search_engine/blob/master/Documents/" + str(index) + ".txt"
+      webbrowser.open_new(path)
 
     self.__mainWindow = Tk()
     self.__mainWindow.title("Search Engine")

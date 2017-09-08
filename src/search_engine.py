@@ -4,9 +4,13 @@ import json
 import document_parser as dp
 import nltk
 import collections
+import os
 
 #terms = dp.parse()
-dump = open('/Users/Artur/Desktop/University/Information Retrieval/Search Engine/src/dump', 'r')  # w+ to write
+counter = 1
+dir = os.path.dirname(__file__)
+relative_path = os.path.join(dir, './dump')
+dump = open(relative_path, 'r')  # w+ to write
 #dump.write(json.dumps(terms))
 terms = json.loads(dump.read())
 
