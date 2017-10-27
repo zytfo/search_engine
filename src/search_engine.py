@@ -5,152 +5,92 @@ import document_parser as dp
 import nltk
 import collections
 import os
+import math
+import operator
 
-#terms = dp.parse()
 counter = 1
 dir = os.path.dirname(__file__)
 relative_path = os.path.join(dir, './dump')
 dump = open(relative_path, 'r')  # w+ to write
-#dump.write(json.dumps(terms))
 terms = json.loads(dump.read())
-
-def intersect(p1, p2, operation):
-    answer = []
-    p1_index = 0
-    p2_index = 0
-    while p1_index != len(p1) and p2_index != len(p2):
-        if p1[p1_index] == p2[p2_index]:
-            answer.append(p1[p1_index])
-            p1_index += 1
-            p2_index += 1
-        elif p1[p1_index] < p2[p2_index]:
-            if operation == 'OR':
-                answer.append(p1[p1_index])
-                p1_index += 1
-            elif operation == 'AND':
-                p1_index += 1
-        else:
-            if operation == 'OR':
-                answer.append(p2[p2_index])
-                p2_index += 1
-            elif operation == 'AND':
-                p2_index += 1
-    return answer
-
-def shunting_yard(input):
-    order = {'(': 0, ')': 0, 'OR': 1, 'AND': 2, 'NOT': 3}
-    output = []
-    stack = []
-    for token in input:
-        if token == '(':
-            stack.append(token)
-        elif token == ')':
-            operator = stack.pop()
-            while operator != '(':
-                output.append(operator)
-                operator = stack.pop()
-        elif token in order:
-            if stack:
-                current_op = stack[-1]
-                while stack and order[current_op] > order[token]:
-                    output.append(stack.pop())
-                    if stack:
-                        current_op = stack[-1]
-            stack.append(token)
-        else:
-            output.append(token.lower())
-    while stack:
-        output.append(stack.pop())
-    return output
-
-def negation(term_indexes):
-    result = []
-    terms_index = list(range(1, len(terms)))
-    if not term_indexes:
-        return term_indexes
-    i = 0
-    for item in terms_index:
-        if item != term_indexes[i]:
-            result.append(item)
-        elif i + 1 < len(term_indexes):
-            i += 1
-    return result
+final_scores = {}
+N = 6004
 
 def parse(query):
-    query = query.replace('(', '( ')
-    query = query.replace(')', ' )')
-    query = query.split(' ')
-    cont = True
-    stack = []
-    st = ''
-    non_exist = ''
+    query_tokens = {}
+    tokens = nltk.word_tokenize(query)
     stemmer = nltk.stem.porter.PorterStemmer()
-    for i in range(0, len(query)):
-        st += dp.fix_token(query[i]) + " "
-    queue = collections.deque(shunting_yard(st.split()))
-    for word in queue:
-        word = stemmer.stem(word)
-        if word not in ['AND', 'OR', 'NOT'] and word not in terms:
-            non_exist += str(word) + ' '
-            cont = False
-    if cont == False:
-        return ("There is no word(s) " + non_exist + "in documents. Try another query.")
-    queue = collections.deque(shunting_yard(query))
-
-    while queue:
-        token = queue.popleft()
-        result = []
-        if token != 'AND' and token != 'OR' and token != 'NOT':
-            token = stemmer.stem(token)
-            if token in terms:
-                result = terms[token]
-        elif token == 'AND':
-            result = intersect(stack.pop(), stack.pop(), 'AND')
-        elif token == 'OR':
-            result = intersect(stack.pop(), stack.pop(), 'OR')
-        elif token == 'NOT':
-            result = negation(stack.pop())
-        stack.append(result)
-    if len(stack) != 1:
-        return "Something went wrong. Don't forget to write either AND, OR or NOT in multiple query. You can use scopes as well"
-    return stack.pop()
-
-'''
-Works withound boolean expression handler for queries like: information retrieval
-'''
-def get_rest(lst):
-    rest_list = []
-    for i in range(1, len(lst)):
-        rest_list.append(lst[i])
-    return rest_list
-
-def multi_intersect(words, operation):
-    lst = []
-    trms = []
-    result = []
-    default_operation = 'AND'
-    non_exist = ''
-    cont = True
-    if len(words) == 1 and operation == '':
-        None
-    elif operation not in ['AND', 'OR', 'NOT']:
-        return "An operation should be either AND, OR or NOT."
-    for word in words:
-        if word not in terms:
-            non_exist += str(word) + ' '
-            cont = False
+    for i in range(0, len(tokens)):
+        tokens[i] = stemmer.stem(dp.fix_token(tokens[i].lower()))
+    tokens = dp.remove_values_from_list(tokens, '')
+    for token in tokens:
+        if token not in query_tokens:
+            query_tokens.update({token:1})
         else:
-            lst.append(terms.get(word))
-    if cont == False:
-        return "There is no word(s) " + non_exist + " in documents. Try another query."
-    else:
-        lst = sorted(lst, key = len)
-        result = lst[0]                  # first in desc
-        trms = get_rest(lst)
-        while len(trms) != 0 and len(result) != 0:
-            result = intersect(result, trms[0], operation)
-            trms = get_rest(trms)
-        return result
+            query_tokens[token] += 1
+    return calculateScores(query_tokens)
+
+
+def calculateScores(query_tokens):
+    temp_scores = {}
+    scores_for_query = queryScores(query_tokens)
+    scores_for_document = documentScores(query_tokens)
+    for term in scores_for_query:
+        docs = scores_for_document.get(term)
+        if docs == None:
+            continue
+        else:
+            for docID in docs:
+                if term not in temp_scores:
+                    temp_scores.update({term: {docID: scores_for_query.get(term) * scores_for_document[term].get(docID)}})
+                else:
+                    for docID in docs:
+                        temp_scores[term][docID] = scores_for_query.get(term) * scores_for_document[term].get(docID)
+    for term in temp_scores:
+        for docID in temp_scores[term]:
+            if docID not in final_scores:
+                final_scores.update({docID:temp_scores[term][docID]})
+            else:
+                final_scores[docID] += temp_scores[term][docID]
+    return sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
+
+
+def documentScores(tokens):
+    document_scores = {}
+    document_length = 0
+    for token in tokens:
+        document_scores.update({token:terms.get(token)})
+    for term in document_scores:
+        if document_scores.get(term) != None:
+            for docID in document_scores[term]:
+                document_scores[term][docID] = 1 + math.log10(document_scores[term][docID])
+                document_length += document_scores[term][docID]**2
+    document_length = math.sqrt(document_length)
+    for term in document_scores:
+        if document_scores.get(term) != None:
+            for docID in document_scores[term]:
+                document_scores[term][docID] = document_scores[term][docID] / document_length
+    return document_scores
+
+def queryScores(tokens):
+    query_scores = {}
+    query_length = 0
+    for token in tokens:
+        tf = 1 + math.log10(tokens[token])
+        terms_from_token = terms.get(token)
+        if terms_from_token != None:
+            idf = math.log10(N / len(terms_from_token))
+        else:
+            idf = None
+        if tf != None and idf != None:
+            tf_idf = tf * idf
+            query_scores.update({token:tf_idf})
+            query_length += tf_idf**2
+    query_length = math.sqrt(query_length)
+    for token in query_scores:
+        query_scores[token] = query_scores[token] / query_length
+    return query_scores
 
 def main(query):
-    return parse(query)
+    return parse(query)[:20]
+

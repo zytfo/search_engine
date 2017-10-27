@@ -11,9 +11,14 @@ class gui:
     output = []
     def search(event):
       output = se.main(self.entry.get())
-      if len(output) != 0 and output[0] != "T" and output[0] != "S":
-        self.message_output['text'] = output
-        self.message_output.bind("<Button-1>", functools.partial(callback, index = output[0]))
+      self.button['state'] = DISABLED
+      self.button.unbind("<Button-1>")
+      if len(output) != 0:
+        text = ""
+        for i in range(0, len(output)):
+          text += "Document #" + str(output[i][0]) + " with score " + str(round((output[i][1]), 5)) + "\n"
+        self.message_output['text'] = text
+        self.message_output.bind("<Button-1>", functools.partial(callback, index = output[0][0]))
         self.nothing['text'] = "Results: " + str(len(output))
       elif len(output) == 0:
         self.nothing['text'] = "No coincidence"
@@ -35,9 +40,8 @@ class gui:
     self.labelText = 'Enter your query'
     self.label = Label(self.frame, text = self.labelText)
     self.entry = Entry(self.frame, width = 40)
-    self.button = Button(self.frame, text = u"Search (or press Enter)")
+    self.button = Button(self.frame, text = u"Search")
     self.button.bind("<Button-1>", search)
-    self.entry.bind("<Return>", search)
     self.caution = Label(self.frame, text = "If you press on any document number you will open the first suitable one as an example.")
     self.number_of_doc = Label(self.frame)
     self.message_output = Message(self.frame, width = 850, font = 'arial 14', fg = "blue", cursor = "hand2")
