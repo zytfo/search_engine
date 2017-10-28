@@ -50,14 +50,6 @@ def parse():
                         terms[word][docID] = 1
     return terms
 
-#vmsmla": {"3770": 2, "4506": 1}
-
 def fix_token(token):
     token = re.sub(r'[^\w\s]','', token)
     return token
-
-#terms = parse()
-#dir = os.path.dirname(__file__)
-#relative_path = os.path.join(dir, './dump')
-#dump = open(relative_path, 'w')  # w+ to write
-#dump.write(json.dumps(terms))

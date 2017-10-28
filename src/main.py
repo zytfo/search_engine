@@ -15,7 +15,7 @@ class gui:
       self.button.unbind("<Button-1>")
       if len(output) != 0:
         text = ""
-        for i in range(0, len(output)):
+        for i in range(0, len(output[:20])):
           text += "Document #" + str(output[i][0]) + " with score " + str(round((output[i][1]), 5)) + "\n"
         self.message_output['text'] = text
         self.message_output.bind("<Button-1>", functools.partial(callback, index = output[0][0]))

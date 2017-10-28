@@ -92,5 +92,5 @@ def queryScores(tokens):
     return query_scores
 
 def main(query):
-    return parse(query)[:20]
+    return parse(query)
 
